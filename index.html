@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Calculadora IRPF España — Salario Neto desde Bruto</title>
+  <meta name="description" content="Calcula tu salario neto a partir del bruto en España. IRPF y Seguridad Social por comunidad autónoma. Actualizada automáticamente cada año fiscal.">
+  <meta name="keywords" content="calculadora IRPF, salario neto bruto, seguridad social, impuestos españa, calculadora impuestos 2024 2025 2026">
+  <meta name="author" content="Calculadora IRPF España">
+
+  <meta property="og:title"       content="Calculadora IRPF España">
+  <meta property="og:description" content="¿Cuánto cobrarás realmente? Calcula tu salario neto, IRPF y SS al instante.">
+  <meta property="og:type"        content="website">
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%232563eb'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' font-size='18' fill='white'>€</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Chart.js — única dependencia externa -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+
+<body>
+
+  <!-- OVERLAY DE CARGA -->
+  <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite">
+    <div class="loading-spinner"></div>
+    <p>Cargando datos fiscales…</p>
+  </div>
+
+  <!-- ENCABEZADO -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="#" class="logo" aria-label="Calculadora IRPF España">
+        <div class="logo-icon" aria-hidden="true">€</div>
+        <span class="logo-text">CalculadoraIRPF
+          <span class="logo-sub">España</span>
+        </span>
+      </a>
+      <div class="badge-actualizado" role="status" aria-live="polite">
+        <span class="badge-dot"></span>
+        <span id="year-indicator">Cargando…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero" role="banner">
+    <div class="hero-inner">
+      <div class="hero-badge">
+        <span aria-hidden="true">🇪🇸</span>
+        Calculadora IRPF y Seguridad Social · <span id="year-fiscal-label">Año fiscal actual</span>
+      </div>
+      <h1>¿Cuánto cobrarás <em>realmente</em>?</h1>
+      <p>
+        Calcula tu salario neto, retenciones de IRPF y cotizaciones a la Seguridad Social
+        en segundos. Ajustado por comunidad autónoma y situación familiar.
+        Datos fiscales cargados automáticamente para el año en curso.
+      </p>
+    </div>
+  </section>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="main" role="main">
+
+    <!-- ─── COLUMNA IZQUIERDA: Formulario ──────────────── -->
+    <aside aria-label="Formulario de datos del contribuyente">
+      <div class="card" id="formulario">
+
+        <div class="form-header">
+          <div class="form-icon" aria-hidden="true">🧮</div>
+          <div>
+            <div class="form-title">Datos del contribuyente</div>
+            <div class="form-subtitle">Los resultados se actualizan en tiempo real</div>
+          </div>
+        </div>
+
+        <!-- Salario bruto anual -->
+        <div class="campo">
+          <label for="salario-bruto-texto">
+            <span aria-hidden="true">€</span> Salario bruto anual
+          </label>
+          <div class="input-salario-wrap">
+            <input
+              type="number"
+              id="salario-bruto-texto"
+              value="30000"
+              min="0"
+              max="200000"
+              step="500"
+              inputmode="numeric"
+              autocomplete="off"
+              placeholder="30000"
+              aria-label="Salario bruto anual en euros"
+            >
+            <span class="input-euro" aria-hidden="true">€</span>
+          </div>
+          <input
+            type="range"
+            class="slider"
+            id="salario-bruto"
+            min="0"
+            max="200000"
+            step="500"
+            value="30000"
+            aria-label="Ajustar salario bruto con control deslizante"
+          >
+          <div class="slider-labels" aria-hidden="true">
+            <span>0 €</span>
+            <strong id="salario-label">30.000 €</strong>
+            <span>200.000 €</span>
+          </div>
+        </div>
+
+        <!-- Número de pagas -->
+        <div class="campo">
+          <label for="num-pagas">📅 Número de pagas</label>
+          <select id="num-pagas" aria-label="Número de pagas anuales">
+            <option value="12">12 pagas</option>
+            <option value="14" selected>14 pagas</option>
+          </select>
+        </div>
+
+        <!-- Estado civil -->
+        <div class="campo">
+          <label for="estado-civil">👤 Estado civil</label>
+          <select id="estado-civil" aria-label="Estado civil">
+            <option value="soltero" selected>Soltero / a</option>
+            <option value="casado">Casado / a (tributación individual)</option>
+          </select>
+        </div>
+
+        <!-- Número de hijos -->
+        <div class="campo">
+          <label for="num-hijos">👶 Número de hijos</label>
+          <select id="num-hijos" aria-label="Número de hijos">
+            <option value="0" selected>Sin hijos</option>
+            <option value="1">1 hijo</option>
+            <option value="2">2 hijos</option>
+            <option value="3">3 hijos</option>
+            <option value="4">4 o más hijos</option>
+          </select>
+        </div>
+
+        <!-- Comunidad autónoma -->
+        <div class="campo">
+          <label for="comunidad">📍 Comunidad autónoma</label>
+          <select id="comunidad" aria-label="Comunidad autónoma de residencia">
+            <!-- Poblado por script.js desde el JSON -->
+          </select>
+          <div class="aviso-foral" id="aviso-foral" style="display:none" role="alert">
+            ⚠️ Esta comunidad tiene <strong>régimen foral</strong>. Los cálculos son
+            orientativos — consulta la normativa específica.
+          </div>
+        </div>
+
+        <div class="info-box" role="note">
+          <div class="info-icon" aria-hidden="true">ℹ️</div>
+          <div class="info-texto">
+            <strong>¿Cómo funciona el sistema de datos?</strong>
+            Los tramos fiscales se cargan desde <code>data/irpf-<em>año</em>.json</code>
+            automáticamente. Para actualizar impuestos en el futuro, basta editar el JSON
+            sin tocar el código.
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- ─── COLUMNA DERECHA: Resultados ─────────────────── -->
+    <section aria-label="Resultados del cálculo">
+      <div class="resultados-col" id="seccion-resultados">
+
+        <!-- Tarjetas principales -->
+        <div class="resultado-grid" role="region" aria-label="Resumen del cálculo">
+
+          <div class="res-card destacada">
+            <span class="res-etiqueta">💚 Neto anual</span>
+            <span class="res-valor" id="neto-anual">—</span>
+            <span class="res-sub">Después de IRPF y Seguridad Social</span>
+          </div>
+
+          <div class="res-card">
+            <div class="res-card-icono" style="background:#eff6ff" aria-hidden="true">📅</div>
+            <span class="res-etiqueta">Neto mensual</span>
+            <span class="res-valor" id="neto-mensual">—</span>
+            <span class="res-sub">Por cada paga</span>
+          </div>
+
+          <div class="res-card">
+            <div class="res-card-icono" style="background:#fef2f2" aria-hidden="true">📉</div>
+            <span class="res-etiqueta">IRPF anual</span>
+            <span class="res-valor" id="irpf-total">—</span>
+            <span class="res-sub">Retención fiscal total</span>
+          </div>
+
+          <div class="res-card">
+            <div class="res-card-icono" style="background:#fff7ed" aria-hidden="true">🛡️</div>
+            <span class="res-etiqueta">Seguridad Social</span>
+            <span class="res-valor" id="ss-total">—</span>
+            <span class="res-sub">Cotización del trabajador</span>
+          </div>
+
+          <div class="res-card">
+            <div class="res-card-icono" style="background:#f5f3ff" aria-hidden="true">%</div>
+            <span class="res-etiqueta">Tipo efectivo IRPF</span>
+            <span class="res-valor" id="tipo-efectivo">—</span>
+            <span class="res-sub">Sobre salario bruto</span>
+          </div>
+
+          <div class="res-card">
+            <div class="res-card-icono" style="background:#f0fdf4" aria-hidden="true">⚖️</div>
+            <span class="res-etiqueta">Presión fiscal</span>
+            <span class="res-valor" id="presion-fiscal">—</span>
+            <span class="res-sub">IRPF + SS sobre bruto</span>
+          </div>
+
+        </div>
+
+        <!-- Barra de distribución -->
+        <div class="card">
+          <div class="barra-titulo">Distribución del salario bruto</div>
+          <div
+            class="barra-track"
+            id="barra-distribucion"
+            role="img"
+            aria-label="Distribución visual del salario"
+          ></div>
+          <div class="barra-leyenda">
+            <div class="leyenda-item">
+              <div class="leyenda-dot" style="background:#10b981" aria-hidden="true"></div>
+              <span>Neto</span><strong id="pct-neto">—</strong>
+            </div>
+            <div class="leyenda-item">
+              <div class="leyenda-dot" style="background:#f87171" aria-hidden="true"></div>
+              <span>IRPF</span><strong id="pct-irpf">—</strong>
+            </div>
+            <div class="leyenda-item">
+              <div class="leyenda-dot" style="background:#f97316" aria-hidden="true"></div>
+              <span>SS</span><strong id="pct-ss">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desglose Seguridad Social -->
+        <div class="card">
+          <div class="barra-titulo" style="margin-bottom:.9rem">
+            Desglose Seguridad Social (trabajador)
+          </div>
+          <ul class="desglose-lista">
+            <li>
+              <span class="etiqueta">Contingencias comunes (4,70%)</span>
+              <span class="resta" id="ss-cc">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">Desempleo (1,55%)</span>
+              <span class="resta" id="ss-des">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">Formación profesional (0,10%)</span>
+              <span class="resta" id="ss-fp">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">MEI (Mecanismo Equidad Intergeneracional)</span>
+              <span class="resta" id="ss-mei">—</span>
+            </li>
+            <li class="divisor">
+              <span class="etiqueta"><strong>Total cotización SS</strong></span>
+              <span class="total" id="ss-total-desglose">—</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Desglose IRPF completo -->
+        <div class="card">
+          <div class="barra-titulo" style="margin-bottom:.9rem">
+            Cálculo IRPF —
+            <span id="comunidad-nombre" style="color:#2563eb;font-weight:600;font-size:.85rem"></span>
+          </div>
+          <ul class="desglose-lista">
+            <li>
+              <span class="etiqueta">Salario bruto anual</span>
+              <span class="valor" id="det-bruto">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">− Cotización SS del trabajador</span>
+              <span class="resta" id="det-ss">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">− Gastos deducibles fijos (Art. 19)</span>
+              <span class="resta" id="gastos-deducibles-val">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">− Reducción rendimientos del trabajo (Art. 20)</span>
+              <span class="resta" id="reduccion-trabajo-val">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">Mínimo personal y familiar</span>
+              <span class="valor azul" id="minimo-personal-val">—</span>
+            </li>
+            <li>
+              <span class="etiqueta"><strong>Base imponible</strong></span>
+              <span class="valor negrita" id="base-imponible">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">− IRPF estatal</span>
+              <span class="resta" id="det-irpf-estatal">—</span>
+            </li>
+            <li>
+              <span class="etiqueta">− IRPF autonómico</span>
+              <span class="resta" id="det-irpf-auto">—</span>
+            </li>
+            <li class="divisor">
+              <span class="etiqueta"><strong>Salario neto anual ✓</strong></span>
+              <span class="total" id="det-neto-final">—</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="card">
+          <div class="tabs" role="tablist" aria-label="Selector de gráficos">
+            <button class="tab-btn activo" data-tab="tab-pie"
+                    role="tab" aria-selected="true" aria-controls="tab-pie">
+              🥧 Distribución
+            </button>
+            <button class="tab-btn" data-tab="tab-barras"
+                    role="tab" aria-selected="false" aria-controls="tab-barras">
+              📊 Progresividad
+            </button>
+            <button class="tab-btn" data-tab="tab-indicadores"
+                    role="tab" aria-selected="false" aria-controls="tab-indicadores">
+              📈 Indicadores
+            </button>
+          </div>
+
+          <div id="tab-pie" class="tab-panel" role="tabpanel">
+            <div class="chart-wrap">
+              <canvas id="grafico-pie" aria-label="Gráfico de distribución del salario" role="img"></canvas>
+            </div>
+          </div>
+
+          <div id="tab-barras" class="tab-panel" hidden role="tabpanel">
+            <p class="chart-caption">Cómo varía el neto según el salario bruto (resto de parámetros fijos)</p>
+            <div class="chart-wrap">
+              <canvas id="grafico-barras" aria-label="Comparativa bruto vs neto" role="img"></canvas>
+            </div>
+          </div>
+
+          <div id="tab-indicadores" class="tab-panel" hidden role="tabpanel">
+            <div class="indicadores">
+
+              <div>
+                <div class="indicador-label">
+                  <span>Presión fiscal total (IRPF + SS)</span>
+                  <strong id="presion-fiscal-ind">—</strong>
+                </div>
+                <div class="indicador-track">
+                  <div class="indicador-fill" id="indicador-presion" style="width:0%"></div>
+                </div>
+                <div class="indicador-rangos"><span>0%</span><span>60%</span></div>
+              </div>
+
+              <div>
+                <div class="indicador-label">
+                  <span>Tipo efectivo IRPF</span>
+                  <strong id="tipo-efectivo-ind">—</strong>
+                </div>
+                <div class="indicador-track">
+                  <div class="indicador-fill" id="indicador-efectivo" style="width:0%"></div>
+                </div>
+                <div class="indicador-rangos"><span>0%</span><span>47%</span></div>
+              </div>
+
+              <div>
+                <div class="indicador-label">
+                  <span>Tipo marginal (último tramo)</span>
+                  <strong id="tipo-marginal-ind">—</strong>
+                </div>
+                <div class="indicador-track">
+                  <div class="indicador-fill" id="indicador-marginal" style="width:0%"></div>
+                </div>
+                <div class="indicador-rangos"><span>0%</span><span>70%</span></div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla de tramos estatales -->
+        <div class="card">
+          <div class="barra-titulo" style="margin-bottom:.9rem">
+            Tramos IRPF estatales — detalle por tramo
+          </div>
+          <table class="tabla-tramos" role="table" aria-label="Tramos IRPF aplicados">
+            <thead>
+              <tr>
+                <th>Tramo (Base imponible)</th>
+                <th class="text-center">Tipo</th>
+                <th class="text-right">Gravado</th>
+                <th class="text-right">Impuesto</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-tramos-body">
+              <!-- Generado por script.js -->
+            </tbody>
+          </table>
+          <p class="tabla-nota">
+            Los tramos autonómicos se aplican adicionalmente sobre la misma base imponible.
+            <span id="comunidad-nombre-tabla"></span>
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA -->
+  <footer class="footer" role="contentinfo">
+    <p>
+      Calculadora orientativa basada en la <strong>Ley 35/2006 del IRPF</strong> y el
+      <strong>RDL 8/2015</strong> de la Seguridad Social. Los resultados son estimaciones —
+      consulta a un asesor fiscal certificado para tu declaración.
+    </p>
+    <p>
+      Los datos fiscales se cargan automáticamente desde
+      <code>data/irpf-<em>año</em>.json</code>. Para actualizar los impuestos de un nuevo
+      año, crea el archivo correspondiente sin tocar el código JavaScript.
+    </p>
+    <p class="footer-tech">
+      Proyecto portfolio · HTML · CSS · JavaScript · Chart.js · Datos 2024–2026
+    </p>
+  </footer>
+
+  <!-- ═══ SCRIPTS — orden de carga obligatorio ═══ -->
+  <!-- 1. Motor de cálculo fiscal puro (sin DOM) -->
+  <script src="js/taxEngine.js"></script>
+  <!-- 2. Módulo de gráficos Chart.js -->
+  <script src="js/charts.js"></script>
+  <!-- 3. Orquestador: carga datos, gestiona UI -->
+  <script src="js/script.js"></script>
+
+  <!-- Lógica de pestañas (inline — muy pequeña) -->
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+          b.classList.remove('activo');
+          b.setAttribute('aria-selected', 'false');
+        });
+        document.querySelectorAll('.tab-panel').forEach(p => p.hidden = true);
+        btn.classList.add('activo');
+        btn.setAttribute('aria-selected', 'true');
+        const panel = document.getElementById(target);
+        if (panel) panel.hidden = false;
+      });
+    });
+
+    // Actualizar indicadores cuando script.js actualiza resultados
+    const _origActualizar = typeof actualizarResultados === 'function'
+      ? actualizarResultados : null;
+    // Los indicadores se actualizan aquí (script.js llama actualizarResultados)
+    // Extiende los IDs adicionales que script.js no cubre directamente
+    document.addEventListener('resultado-actualizado', (e) => {
+      const r = e.detail;
+      const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+      const fmt = n => new Intl.NumberFormat('es-ES',{style:'currency',currency:'EUR',minimumFractionDigits:2}).format(n);
+      const pct = n => `${n.toFixed(2)}%`;
+
+      set('ss-total-desglose', fmt(r.cotizacionSS));
+      set('det-bruto',         fmt(r.salarioBruto));
+      set('det-ss',            fmt(r.cotizacionSS));
+      set('det-irpf-estatal',  fmt(r.irpfEstatal));
+      set('det-irpf-auto',     fmt(r.irpfAutonomico));
+      set('det-neto-final',    fmt(r.netoAnual));
+      set('presion-fiscal-ind', pct(r.presionFiscal));
+      set('tipo-efectivo-ind',  pct(r.tipoEfectivoIRPF));
+      set('tipo-marginal-ind',  pct(r.tipoMarginal));
+      set('tipo-marginal',      pct(r.tipoMarginal));
+      set('comunidad-nombre-tabla', r.comunidadNombre);
+
+      const ip = document.getElementById('indicador-presion');
+      const ie = document.getElementById('indicador-efectivo');
+      const im = document.getElementById('indicador-marginal');
+      if (ip) ip.style.width = Math.min(100, (r.presionFiscal  / 60) * 100) + '%';
+      if (ie) ie.style.width = Math.min(100, (r.tipoEfectivoIRPF / 47) * 100) + '%';
+      if (im) im.style.width = Math.min(100, (r.tipoMarginal   / 70) * 100) + '%';
+    });
+  </script>
+
+</body>
+</html>
